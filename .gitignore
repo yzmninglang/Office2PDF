@@ -1,0 +1,9 @@
+*
+!*/
+!.gitignore
+!*.py
+!*.md
+!*.ico
+test.py
+testos.py
+
