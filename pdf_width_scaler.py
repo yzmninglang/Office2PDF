@@ -127,7 +127,7 @@ def process_pdf(input_path, output_path):
         first_page = reader.pages[0]
         # 确保使用float类型进行计算
         target_width = float(first_page.mediabox[2] - first_page.mediabox[0])
-        print(f"目标宽度: {first_page.mediabox}")
+        # print(f"目标宽度: {first_page.mediabox}")
         first_page_height = float(first_page.mediabox[3] - first_page.mediabox[0])
 
         # 处理每一页
@@ -143,7 +143,7 @@ def process_pdf(input_path, output_path):
                 if abs(current_width - target_width) > 0.1:  # 考虑到浮点数精度问题
                     # 需要缩放页面
                     scale_factor = target_width / current_width
-                    print(f"缩放页面 {i + 1}：当前宽度 {current_width}, 目标宽度 {target_width}, 缩放因子 {scale_factor}")
+                    # print(f"缩放页面 {i + 1}：当前宽度 {current_width}, 目标宽度 {target_width}, 缩放因子 {scale_factor}")
                     new_height = current_height * scale_factor
                     # 创建新的页面对象
                     new_page = page
