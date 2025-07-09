@@ -1,10 +1,14 @@
 ### **README.md**
 
----
+
 
 ## 📑 Office2PDF - Word/PPT 转 PDF & PDF 合并工具
 
 **Office2PDF** 是一个多功能的桌面应用程序，支持将 Word 和 PowerPoint 文件批量转换为 PDF，并提供 PDF 合并功能。此外，它还支持书签保留和自定义排序，非常适合日常办公文档处理。
+
+- 这部分建议直接参考[evgo2017/Office2PDF: Office 文件（Word、Excel、PPT）批量转为 PDF 文件，文档完善，自用满意](https://github.com/evgo2017/Office2PDF)
+
+- 添加了pdf宽度统一的工具
 
 ---
 
