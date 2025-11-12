@@ -2,7 +2,7 @@ import sys
 import os
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, 
                             QHBoxLayout, QFileDialog, QWidget, QCheckBox, QLabel, 
-                            QProgressBar, QMessageBox, QGroupBox)
+                            QProgressBar, QMessageBox, QGroupBox, QSpinBox)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QIcon
 import fitz
@@ -12,11 +12,13 @@ class CropThread(QThread):
     progress_updated = pyqtSignal(int)
     task_completed = pyqtSignal(bool, str)
     
-    def __init__(self, input_path, output_path, trim_vertical):
+    def __init__(self, input_path, output_path, trim_vertical, safety_margin_horizontal, safety_margin_vertical):
         super().__init__()
         self.input_path = input_path
         self.output_path = output_path
         self.trim_vertical = trim_vertical
+        self.safety_margin_horizontal = safety_margin_horizontal
+        self.safety_margin_vertical = safety_margin_vertical
         
     def detect_content_bbox(self, page, threshold=0.1, trim_vertical=True):
         """检测页面内容的边界框"""
@@ -49,13 +51,14 @@ class CropThread(QThread):
         x1 = mediabox.x0 + right * (mediabox.x1 - mediabox.x0) / width
         y1 = mediabox.y0 + bottom * (mediabox.y1 - mediabox.y0) / height
         
-        safety_margin = 15  # 磅
-        x0 = max(mediabox.x0, x0 - safety_margin)
-        x1 = min(mediabox.x1, x1 + safety_margin)
+        # 应用水平安全边距
+        x0 = max(mediabox.x0, x0 - self.safety_margin_horizontal)
+        x1 = min(mediabox.x1, x1 + self.safety_margin_horizontal)
         
+        # 根据 trim_vertical 决定是否应用垂直安全边距
         if trim_vertical:
-            y0 = max(mediabox.y0, y0 - safety_margin)
-            y1 = min(mediabox.y1, y1 + safety_margin)
+            y0 = max(mediabox.y0, y0 - self.safety_margin_vertical)
+            y1 = min(mediabox.y1, y1 + self.safety_margin_vertical)
         else:
             # 不裁剪垂直方向，使用原始页面的上下边界
             y0 = mediabox.y0
@@ -154,6 +157,27 @@ class PDFTrimmer(QMainWindow):
         self.trim_vertical_checkbox = QCheckBox("裁剪上下白边")
         self.trim_vertical_checkbox.setChecked(False)
         options_layout.addWidget(self.trim_vertical_checkbox)
+
+        # safety_margin 控件
+        # 水平安全边距控件
+        safety_margin_h_layout = QHBoxLayout()
+        safety_margin_h_label = QLabel("水平安全边距 (磅):")
+        self.safety_margin_h_spinbox = QSpinBox()
+        self.safety_margin_h_spinbox.setRange(0, 100) # 设置合适的范围
+        self.safety_margin_h_spinbox.setValue(15) # 默认值
+        safety_margin_h_layout.addWidget(safety_margin_h_label)
+        safety_margin_h_layout.addWidget(self.safety_margin_h_spinbox)
+        options_layout.addLayout(safety_margin_h_layout)
+
+        # 垂直安全边距控件
+        safety_margin_v_layout = QHBoxLayout()
+        safety_margin_v_label = QLabel("垂直安全边距 (磅):")
+        self.safety_margin_v_spinbox = QSpinBox()
+        self.safety_margin_v_spinbox.setRange(0, 100) # 设置合适的范围
+        self.safety_margin_v_spinbox.setValue(15) # 默认值
+        safety_margin_v_layout.addWidget(safety_margin_v_label)
+        safety_margin_v_layout.addWidget(self.safety_margin_v_spinbox)
+        options_layout.addLayout(safety_margin_v_layout)
         
         main_layout.addWidget(options_group)
         
@@ -184,7 +208,17 @@ class PDFTrimmer(QMainWindow):
         
         if file_path:
             self.file_path = file_path
-            self.file_path_label.setText(file_path)
+            
+            # 限制文件路径显示长度
+            max_display_length = 50
+            if len(file_path) > max_display_length:
+                # 获取文件名和扩展名
+                base_name = os.path.basename(file_path)
+                displayed_path = "..." + base_name
+            else:
+                displayed_path = file_path
+                
+            self.file_path_label.setText(displayed_path)
             self.process_button.setEnabled(True)
             
     def process_pdf(self):
@@ -199,9 +233,11 @@ class PDFTrimmer(QMainWindow):
         output_path = f"{base_name}_trim{ext}"
         
         self.crop_thread = CropThread(
-            self.file_path, 
-            output_path, 
-            self.trim_vertical_checkbox.isChecked()
+            self.file_path,
+            output_path,
+            self.trim_vertical_checkbox.isChecked(),
+            self.safety_margin_h_spinbox.value(),
+            self.safety_margin_v_spinbox.value()
         )
         
         self.crop_thread.progress_updated.connect(self.update_progress)
