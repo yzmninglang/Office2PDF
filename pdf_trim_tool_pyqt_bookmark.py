@@ -121,7 +121,7 @@ class PDFTrimmer(QMainWindow):
         self.initUI()
         
     def initUI(self):
-        self.setWindowIcon(QIcon("trim.ico"))
+        self.setWindowIcon(QIcon(":/trim.ico"))
         self.setWindowTitle('PDF白边裁剪工具')
         self.setGeometry(300, 300, 600, 400)
         
